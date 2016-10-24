@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=YTphayiAHpFleDKZc64A2Ci2"></script>
+    <script type="text/javascript" src="http://api.map.baidu.com/library/Heatmap/2.0/src/Heatmap_min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src='jquery.js'></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <title>热力图功能示例</title>
+    <style type="text/css">
+    ul,
+    li {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        float: left;
+    }
+    
+    html {
+        height: 100%
+    }
+    
+    body {
+        height: 100%;
+        margin: 10px;
+        padding: 0px;
+        font-family: "微软雅黑";
+    }
+    
+    #container {
+        position: relative;
+        height: 75%;
+        width: 100%;
+        z-index: 2;
+    }
+    
+    #Dchart {
+        height: 30%;
+        width: 30%;
+        margin: 0 auto;
+    }
+    
+    #bar {
+        z-index: 1;
+        position: absolute;
+        height: 100px;
+        width: 20px;
+        top: 550px;
+        left: 1850px;
+    }
+    </style>
+</head>
+
+<body bgcolor="black">
+    <div id="bar">
+        <p>100<img src="bar.png">20</p>
+    </div>
+    <div id="container"></div>
+    <br>
+    <div id="Dchart"></div>
+</body>
+
+</html>
+<script type="text/javascript">
+function CreateMap() {
+    var map = new BMap.Map("container"); // 创建地图实例
+
+    var point = new BMap.Point(121.905424, 30.882241);
+    map.centerAndZoom(point, 18); // 初始化地图，设置中心点坐标和地图级别
+    map.enableScrollWheelZoom(); // 允许滚轮缩放
+
+    //详细的参数,可以查看heatmap.js的文档 https://github.com/pa7/heatmap.js/blob/master/README.md
+    //参数说明如下:
+    /* visible 热力图是否显示,默认为true
+     * opacity 热力的透明度,1-100
+     * radius 势力图的每个点的半径大小   
+     * gradient  {JSON} 热力图的渐变区间 . gradient如下所示
+     *	{
+			.2:'rgb(0, 255, 255)',
+			.5:'rgb(0, 110, 255)',
+			.8:'rgb(100, 0, 255)'
+		}
+		其中 key 表示插值的位置, 0~1. 
+		    value 为颜色值. 
+     */
+    map.addControl(new BMap.NavigationControl());
+    map.addControl(new BMap.ScaleControl());
+    map.addControl(new BMap.OverviewMapControl());
+    map.addControl(new BMap.MapTypeControl());
+    heatmapOverlay = new BMapLib.HeatmapOverlay({
+        "radius": 5.0,
+        "opacity": 0.6,
+        "gradient": {
+            0: 'rgb(102, 255, 0)',
+            .5: 'rgb(255, 170, 0)',
+            1: 'rgb(255, 0, 0)'
+        }
+    });
+    map.addOverlay(heatmapOverlay);
+    map.setMapStyle({
+        style: 'googlelite'
+    });
+
+}
+
+function AddChart() {
+
+    Highcharts.setOptions({
+        global: {
+            useUTC: false
+        }
+    });
+    Highcharts.createElement('link', {
+        href: '//fonts.googleapis.com/css?family=Unica+One',
+        rel: 'stylesheet',
+        type: 'text/css'
+    }, null, document.getElementsByTagName('head')[0]);
+
+    Highcharts.theme = {
+        colors: ["#2b908f", "#90ee7e", "#f45b5b", "#7798BF", "#aaeeee", "#ff0066", "#eeaaee",
+            "#55BF3B", "#DF5353", "#7798BF", "#aaeeee"
+        ],
+        chart: {
+            backgroundColor: {
+                linearGradient: {
+                    x1: 0,
+                    y1: 0,
+                    x2: 1,
+                    y2: 1
+                },
+                stops: [
+                    [0, '#2a2a2b'],
+                    [1, '#3e3e40']
+                ]
+            },
+            style: {
+                fontFamily: "'Unica One', sans-serif"
+            },
+            plotBorderColor: '#606063'
+        },
+        title: {
+            style: {
+                color: '#E0E0E3',
+                textTransform: 'uppercase',
+                fontSize: '20px'
+            }
+        },
+        subtitle: {
+            style: {
+                color: '#E0E0E3',
+                textTransform: 'uppercase'
+            }
+        },
+        xAxis: {
+            gridLineColor: '#707073',
+            labels: {
+                style: {
+                    color: '#E0E0E3'
+                }
+            },
+            lineColor: '#707073',
+            minorGridLineColor: '#505053',
+            tickColor: '#707073',
+            title: {
+                style: {
+                    color: '#A0A0A3'
+
+                }
+            }
+        },
+        yAxis: {
+            gridLineColor: '#707073',
+            labels: {
+                style: {
+                    color: '#E0E0E3'
+                }
+            },
+            lineColor: '#707073',
+            minorGridLineColor: '#505053',
+            tickColor: '#707073',
+            tickWidth: 1,
+            title: {
+                style: {
+                    color: '#A0A0A3'
+                }
+            }
+        },
+        tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            style: {
+                color: '#F0F0F0'
+            }
+        },
+        plotOptions: {
+            series: {
+                dataLabels: {
+                    color: '#B0B0B3'
+                },
+                marker: {
+                    lineColor: '#333'
+                }
+            },
+            boxplot: {
+                fillColor: '#505053'
+            },
+            candlestick: {
+                lineColor: 'white'
+            },
+            errorbar: {
+                color: 'white'
+            }
+        },
+        legend: {
+            itemStyle: {
+                color: '#E0E0E3'
+            },
+            itemHoverStyle: {
+                color: '#FFF'
+            },
+            itemHiddenStyle: {
+                color: '#606063'
+            }
+        },
+        credits: {
+            style: {
+                color: '#666'
+            }
+        },
+        labels: {
+            style: {
+                color: '#707073'
+            }
+        },
+
+        drilldown: {
+            activeAxisLabelStyle: {
+                color: '#F0F0F3'
+            },
+            activeDataLabelStyle: {
+                color: '#F0F0F3'
+            }
+        },
+
+        navigation: {
+            buttonOptions: {
+                symbolStroke: '#DDDDDD',
+                theme: {
+                    fill: '#505053'
+                }
+            }
+        },
+
+        // scroll charts
+        rangeSelector: {
+            buttonTheme: {
+                fill: '#505053',
+                stroke: '#000000',
+                style: {
+                    color: '#CCC'
+                },
+                states: {
+                    hover: {
+                        fill: '#707073',
+                        stroke: '#000000',
+                        style: {
+                            color: 'white'
+                        }
+                    },
+                    select: {
+                        fill: '#000003',
+                        stroke: '#000000',
+                        style: {
+                            color: 'white'
+                        }
+                    }
+                }
+            },
+            inputBoxBorderColor: '#505053',
+            inputStyle: {
+                backgroundColor: '#333',
+                color: 'silver'
+            },
+            labelStyle: {
+                color: 'silver'
+            }
+        },
+
+        navigator: {
+            handles: {
+                backgroundColor: '#666',
+                borderColor: '#AAA'
+            },
+            outlineColor: '#CCC',
+            maskFill: 'rgba(255,255,255,0.1)',
+            series: {
+                color: '#7798BF',
+                lineColor: '#A6C7ED'
+            },
+            xAxis: {
+                gridLineColor: '#505053'
+            }
+        },
+
+        scrollbar: {
+            barBackgroundColor: '#808083',
+            barBorderColor: '#808083',
+            buttonArrowColor: '#CCC',
+            buttonBackgroundColor: '#606063',
+            buttonBorderColor: '#606063',
+            rifleColor: '#FFF',
+            trackBackgroundColor: '#404043',
+            trackBorderColor: '#404043'
+        },
+
+        // special colors for some of the
+        legendBackgroundColor: 'rgba(0, 0, 0, 0.5)',
+        background2: '#505053',
+        dataLabelsColor: '#B0B0B3',
+        textColor: '#C0C0C0',
+        contrastTextColor: '#F0F0F3',
+        maskColor: 'rgba(255,255,255,0.3)'
+    };
+
+    // Apply the theme
+    Highcharts.setOptions(Highcharts.theme);
+    $('#Dchart').highcharts({
+        chart: {
+            type: 'spline',
+            animation: Highcharts.svg, // don't animate in old IE
+            marginRight: 2
+        },
+        title: {
+            text: 'PM2.5 Index'
+        },
+        xAxis: {
+            type: 'datetime',
+            tickPixelInterval: 150
+        },
+        yAxis: {
+            title: {
+                text: 'PM2.5 index'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }],
+            lineColor: '#FF0000'
+
+        },
+        legend: {
+            layout: "horizontal",
+            enabled: false
+        },
+        exporting: {
+            enabled: false
+        },
+        series: [{
+
+            data: (function() {
+                // generate an array of random data
+                var data = [],
+                    time = (new Date()).getTime(),
+                    i;
+
+                for (i = -19; i <= 0; i += 1) {
+                    data.push({
+                        x: time + i * 10000,
+                        y: Math.random() * 40
+                    });
+                }
+                return data;
+            }())
+        }]
+    });
+
+
+}
+</script>
+<script>
+CreateMap();
+//调用CreateMap函数。
+AddChart();
+</script>
+<script>
+var socket = io.connect("http://localhost:8080");
+socket.on("transmit", function(results) {
+    var obj = results.data;
+    var NoIndex = results.NoX;
+    //获取数据并且加工成谷歌支持的数组
+    heatData = [];
+    for (i = 0; i < obj.length; i++) {
+        weighted = {};
+        weighted.lng = obj[i].lng;
+        weighted.lat = obj[i].lat;
+        weighted.count = obj[i].count;
+        heatData.push(weighted);
+    }
+    heatmapOverlay.setDataSet({
+        data: heatData,
+        max: 100
+    });
+    var x = (new Date()).getTime();
+    var y = NoIndex;
+    var chart = $('#Dchart').highcharts();
+    console.log(x);
+    console.log(y);
+    chart.series[0].addPoint(
+        [x, y], true, true
+    );
+
+
+});
+</script>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>real time display pollution</title>
+    <meta name="viewpoint" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDybEm_D4K1C3MWK2BOienhiDIZy7a2cKg&signed_in=true&libraries=visualization"></script>
+    <script type="text/javascript" src='jquery.js'></script>
+    <style>
+    html,
+    body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    #heatmap {
+        height: 100%;
+    }
+    </style>
+</head>
+
+<body>
+    <div id="heatmap"></div>
+</body>
+<script>
+var map;
+map = new google.maps.Map(document.getElementById('heatmap'), {
+    center: {
+        lat: 30.8774598,
+        lng: 121.90305570000001
+    },
+    zoom: 15,
+});
+var marker = new google.maps.Marker({
+    position: {
+        lat: 30.877,
+        lng: 121.903
+    },
+    map: map,
+    title: 'hello world'
+})
+$.getJSON('googledata.json', function(results) {
+    alert('success')
+    var samplePoint = [];
+    var weighted = {};
+    for (var i = 0; i < results.data.length; i++) {
+        weighted.count = Number(results.data[i].count);
+        weighted.location = new google.maps.LatLng(Number(results.data[i].lat), Number(results.data[i].lng))
+        samplePoint.push(weighted);
+    }
+    var heatmap = new google.maps.visualization.HeatmapLayer({
+        data:samplePoint
+    });
+    heatmap.setMap(map);
+
+})
+</script>
+
+</html>
